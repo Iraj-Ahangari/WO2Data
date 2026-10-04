@@ -7,7 +7,8 @@ Workorder2data converts raw CMMS text into ISO 14224:2016 structured records. Sc
 - `uv run pytest` — run tests
 - `uv run pytest tests/test_x.py::test_name` — run one test
 - `uv run w2d synth generate --dry-run` — synthetic data allocation and usage estimate (no API calls); see `docs/synthetic-data.md`
-- `uv run w2d eval --pred preds.jsonl --split test` — score predictions against gold
+- `uv run w2d convert "text"` / `uv run w2d batch file.csv --id-col ... --text-col ...` — convert work orders (see `docs/usage.md`); add `--dry-run` to estimate tokens
+- `uv run w2d predict --split test` then `uv run w2d eval --pred data/synthetic/preds.jsonl --split test` — score the extractor on synthetic gold
 
 ## Taxonomy rules (most important)
 - ISO values (equipment classes, subunits, failure modes, mechanisms, causes, detection methods, maintenance activities) come only from `Resources/ISO-14224.pdf` via `taxonomy/*.csv`. Never write them from memory, never hardcode them in code, prompts, or tests.

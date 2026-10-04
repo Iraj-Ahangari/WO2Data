@@ -21,7 +21,7 @@ Decisions behind this plan are recorded in `IDEA.md` and `CLAUDE.md`. The taxono
 - Dev/test split, frozen test split, per-field precision/recall report.
 - **User:** review about 60 gold test records, stratified across categories.
 
-## Phase 1d — extractor, library, CLI
+## Phase 1d — extractor, library, CLI (code done; needs an API key and a first real run)
 - `Extractor` interface plus Anthropic two-stage adapter (stage 1 class, stage 2 class-scoped fields), prompt caching for static taxonomy blocks.
 - Deterministic layer: CSV/text parsing with column mapping, tag and date extraction, abbreviation glossary, `tag_prefix_map.yaml`.
 - `convert(text) -> list[Record]`; CLI: batch (CSV/text) and single-text; `--dry-run` for cost; JSONL master output plus flat CSV.

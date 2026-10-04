@@ -6,10 +6,15 @@ from typing import Protocol
 
 GENERATOR_MODEL_DEFAULT = "claude-opus-5-5"
 EXTRACTOR_MODEL_DEFAULT = "claude-sonnet-5-5"
+EXTRACTOR_EFFORT_DEFAULT = "medium"
 
 
 class LLMClient(Protocol):
-    def complete(self, *, system: str, user: str, model: str, max_tokens: int = 2000) -> str: ...
+    def complete(
+        self, *, system: str, user: str, model: str, max_tokens: int = 2000, cached_system: str | None = None
+    ) -> str:
+        """`cached_system` is a large static prefix (e.g. taxonomy lists) the provider may cache across calls."""
+        ...
 
 
 class LLMRefusal(RuntimeError):
@@ -23,11 +28,17 @@ class AnthropicClient:
         self._client = anthropic.Anthropic()
         self._effort = effort
 
-    def complete(self, *, system: str, user: str, model: str, max_tokens: int = 2000) -> str:
+    def complete(
+        self, *, system: str, user: str, model: str, max_tokens: int = 2000, cached_system: str | None = None
+    ) -> str:
+        blocks = []
+        if cached_system:
+            blocks.append({"type": "text", "text": cached_system, "cache_control": {"type": "ephemeral"}})
+        blocks.append({"type": "text", "text": system})
         response = self._client.messages.create(
             model=model,
             max_tokens=max_tokens,
-            system=system,
+            system=blocks,
             messages=[{"role": "user", "content": user}],
             output_config={"effort": self._effort},
         )

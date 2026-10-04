@@ -1,0 +1,9 @@
+# Per-plant map from equipment-tag prefix to equipment class id (see taxonomy equipment_classes.csv).
+# A mapped prefix beats the model's class guess; a warning is raised if the text contradicts it.
+# Optional: regex used to find tags in text; group 1 must be the prefix.
+# tag_pattern: '\b([A-Z]{1,4})-?(\d{2,5}[A-Z]?)\b'
+prefixes:
+  P: pumps
+  C: compressors
+  E: heat_exchangers
+  V: pressure_vessels
