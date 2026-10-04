@@ -1,0 +1,5 @@
+{
+  "common_class_ids": ["pumps", "compressors", "electric_motors", "valves", "heat_exchangers"],
+  "common_weight": 3,
+  "default_weight": 1
+}

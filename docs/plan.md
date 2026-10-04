@@ -15,9 +15,9 @@ Decisions behind this plan are recorded in `IDEA.md` and `CLAUDE.md`. The taxono
 - Taxonomy loader, Pydantic `Record` schema, validators, warning logic.
 - **User:** verify class by class, starting with the classes seen most in the plant.
 
-## Phase 1c — synthetic data and eval harness
+## Phase 1c — synthetic data and eval harness (code done; generation and gold review pending)
 - Label-first generator using a different model from the extractor.
-- About 5 records per class, weighted toward common classes, floor of 3 per class; about 20% vague or multi-failure; English only; tagged `synthetic`.
+- 200 records over the 27 classes that have data: floor of 3 per class, weighted toward common classes; about 20% vague or multi-event; English only; tagged `synthetic`; stored in git-ignored `data/`. Details in `docs/synthetic-data.md`.
 - Dev/test split, frozen test split, per-field precision/recall report.
 - **User:** review about 60 gold test records, stratified across categories.
 
