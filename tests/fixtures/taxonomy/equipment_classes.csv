@@ -1,0 +1,4 @@
+class_id,code,name,category,category_ref,annex_a_ref,footnote_refs,source_table,source_page,verified
+example_widgets,XW,Example widgets,Example category one,X.1,X.1.1,,EX.1,1,false
+example_gadgets,XG,Example gadgets,Example category one,X.1,No,,EX.1,1,false
+example_gadgets_two,XG,Example gadgets,Example category two,X.2,No,a,EX.1,1,false

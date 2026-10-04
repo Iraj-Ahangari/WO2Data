@@ -1,0 +1,3 @@
+category,annex_ref,failure_mode_table,footnote_refs,source_table,source_page,verified
+Example category one,X.1,FM.1,,EX.1,1,false
+Example category two,X.2,,a,EX.1,1,false

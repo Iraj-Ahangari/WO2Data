@@ -1,0 +1,4 @@
+code,name,level,parent_code,description,footnote_refs,source_table,source_page,verified
+1,Example group one,1,,,,EX.3,3,false
+1.0,General,2,1,Fictional general entry,,EX.3,3,false
+1.1,Example subdivision,2,1,Fictional subdivision,,EX.3,3,false

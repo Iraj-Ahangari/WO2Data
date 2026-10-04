@@ -1,0 +1,21 @@
+[project]
+name = "workorder2data"
+version = "0.1.0"
+description = "Convert raw CMMS maintenance text into ISO 14224 structured records"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Iraj Ahangari", email = "ahangarii@gmail.com" }]
+requires-python = ">=3.13"
+dependencies = [
+    "pydantic>=2.13.5",
+]
+
+[build-system]
+requires = ["uv_build>=0.9.26,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

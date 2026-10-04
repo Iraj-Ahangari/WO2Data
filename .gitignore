@@ -1,0 +1,19 @@
+# Licensed / sensitive material — never commit
+# ISO 14224 is copyrighted: neither the PDF nor taxonomy tables derived from it go into this MIT repo.
+Resources/*.pdf
+taxonomy/*.csv
+data/*
+!data/.gitkeep
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+dist/
+*.egg-info/
+
+# OS
+.DS_Store
