@@ -1,0 +1,4 @@
+fm_id,table,category,code,name,examples,applies_to,source_page,verified
+FM.1.AAA.1,FM.1,Example category one,AAA,Example failure mode,Fictional example,XW;XG,7,false
+FM.1.BBB.1,FM.1,Example category one,BBB,Another example mode,Fictional example,XGA,7,false
+FM.1.BBB.2,FM.1,Example category one,BBB,Another example mode,Second fictional example,XW,7,false

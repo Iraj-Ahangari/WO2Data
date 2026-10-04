@@ -14,9 +14,13 @@ On the maintainer's machine the CSVs were transcribed from `Resources/ISO-14224.
 | `failure_causes.csv` | Table B.3 (pdf 187–188) | 26 | Same structure as mechanisms. |
 | `detection_methods.csv` | Table B.4 (pdf 189) | 11 | `activity_group` is the right-hand column of the table. |
 | `maintenance_activities.csv` | Table B.5 (pdf 190) | 12 | `use`: `C` typically corrective, `P` typically preventive (`C;P` both). |
-| `footnotes.csv` | Footnotes of the tables above | 28 | Rows reference them by letter in `footnote_refs`. |
+| `subunits.csv` | Annex A subdivision tables for the topside classes (pdf 69–130) | 134 | `subunit_id` = `<class_id>.<n>`. Only classes that have a subdivision table. |
+| `maintainable_items.csv` | Same tables | 810 | One row per item under a subunit, in table order. |
+| `failure_modes.csv` | Tables B.6–B.9 (pdf 193–200) | 119 | One row per table row: a code can appear on several rows with different explanations. `applies_to` lists the class codes marked X. |
+| `failure_mode_class_aliases.csv` | Table B.9 column headers | 2 | B.9 uses two column codes that are not class codes in A.4; this maps them to a class. |
+| `footnotes.csv` | Footnotes and notes of the tables above | 87 | Rows reference them by letter in `footnote_refs`. |
 
-Not yet transcribed: subunits and maintainable items (Annex A per-class tables), failure modes (B.6–B.14, B.15).
+Phase 1b covers the topside categories only (rotating, mechanical, electrical, safety and control). Not yet transcribed: the failure-mode tables for the other categories (B.10–B.14), their Annex A tables, the B.15 overview, the per-class "type classification" tables, and the equipment-specific data tables.
 
 ## Verification checklist for the user
 1. Open each page and compare 10 random rows per file; then confirm the rest.
@@ -24,6 +28,8 @@ Not yet transcribed: subunits and maintainable items (Annex A per-class tables),
 3. Flip `verified` to `true` only after you have checked the row.
 
 ## Points that may need your judgment
+- Of the 44 topside classes, only 27 have a subdivision table and a failure-mode column in the standard; the same 27 in both. The other 17 have neither, so subunit and failure mode cannot be validated for them.
+- The control logic units table lists "No subdivision" for two of its subunits (system bus, power supply).
 - Utilities (A.2.11) and Auxiliaries (A.2.12) have no failure-mode table in B.6–B.14.
 - B.4 prose says "nine categories", but the table has 11 codes; the table is used.
 - `Flare ignition` (FI, safety and control) and `Flare ignition equipment` (FE, utilities) appear as two classes.

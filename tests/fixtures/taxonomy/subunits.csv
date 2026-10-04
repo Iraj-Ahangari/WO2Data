@@ -1,0 +1,3 @@
+class_id,subunit_id,name,footnote_refs,order,source_table,source_page,verified
+example_widgets,example_widgets.1,Example subunit one,,1,EX.6,6,false
+example_widgets,example_widgets.2,Example subunit two,a,2,EX.6,6,false
