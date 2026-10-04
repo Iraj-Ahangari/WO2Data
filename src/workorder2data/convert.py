@@ -8,9 +8,7 @@ from typing import Callable
 from workorder2data.extractor import Extractor
 from workorder2data.glossary import load_glossary
 from workorder2data.inputs import WorkOrder
-from workorder2data.llm import (
-    EXTRACTOR_EFFORT_DEFAULT, EXTRACTOR_MODEL_DEFAULT, AnthropicClient, LLMClient, load_dotenv,
-)
+from workorder2data.llm import EXTRACTOR_EFFORT_DEFAULT, LLMClient, backend_for, load_dotenv, make_client, resolve_model
 from workorder2data.records import NOT_STATED, UNVERIFIED_TAXONOMY, Record
 from workorder2data.schema import LABEL_FIELDS, UNKNOWN
 from workorder2data.tags import load_tag_map
@@ -24,15 +22,18 @@ def make_extractor(
     tag_map_path: Path | None = None,
     taxonomy_dir: Path | None = None,
     client: LLMClient | None = None,
+    backend: str | None = None,
+    base_url: str | None = None,
 ) -> Extractor:
     tax = Taxonomy(taxonomy_dir)
+    backend = backend_for("extractor", backend)
     if client is None:
         load_dotenv()
-        client = AnthropicClient(effort=os.environ.get("W2D_EXTRACTOR_EFFORT", EXTRACTOR_EFFORT_DEFAULT))
+        client = make_client(backend, effort=os.environ.get("W2D_EXTRACTOR_EFFORT", EXTRACTOR_EFFORT_DEFAULT), base_url=base_url)
     return Extractor(
         tax,
         client,
-        model=model or os.environ.get("W2D_EXTRACTOR_MODEL", EXTRACTOR_MODEL_DEFAULT),
+        model=resolve_model("extractor", backend, model),
         glossary=load_glossary(glossary_path),
         tag_map=load_tag_map(tag_map_path, set(tax.classes)),
     )

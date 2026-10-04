@@ -2,7 +2,7 @@
 
 Convert raw CMMS maintenance text (work order descriptions, technician comments, work reports) into structured records following **ISO 14224:2016**.
 
-**Status: early development.** The converter (`w2d convert` / `w2d batch`), the synthetic test-data generator and the evaluation harness are implemented and unit-tested with a fake model; they have not yet been run against the real API or real work orders.
+**Status: early development.** The converter (`w2d convert` / `w2d batch`), the synthetic test-data generator and the evaluation harness are implemented and unit-tested with a fake model; they run on the Anthropic API, the Claude Code CLI (no key) or local Ollama models; early trials only, no real work orders yet.
 
 - Scope and principles: [IDEA.md](IDEA.md)
 - Using the converter: [docs/usage.md](docs/usage.md)

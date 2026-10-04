@@ -10,7 +10,7 @@ from workorder2data.convert import convert_many, make_extractor, summarize
 from workorder2data.evaluate import evaluate, format_report, report_to_dict
 from workorder2data.inputs import CsvMapping, WorkOrder, read_csv, read_text_file
 from workorder2data.records import Record, to_predictions, write_records_csv, write_records_jsonl
-from workorder2data.llm import EXTRACTOR_MODEL_DEFAULT, GENERATOR_MODEL_DEFAULT, load_dotenv
+from workorder2data.llm import BACKENDS, LLMError, backend_for, load_dotenv, make_client, resolve_model
 from workorder2data.schema import Prediction, Sample, read_jsonl, write_jsonl
 from workorder2data.synth.sampler import allocate, split_test_counts
 from workorder2data.taxonomy import Taxonomy
@@ -31,10 +31,15 @@ def _weights(path: Path, class_ids: list[str]) -> dict[str, float]:
 def cmd_generate(args: argparse.Namespace) -> int:
     from workorder2data.synth.generate import generate
 
-    model = args.model or os.environ.get("W2D_GENERATOR_MODEL", GENERATOR_MODEL_DEFAULT)
-    extractor = os.environ.get("W2D_EXTRACTOR_MODEL", EXTRACTOR_MODEL_DEFAULT)
-    if model == extractor:
-        print(f"error: generator model and extractor model are both {model}; they must differ", file=sys.stderr)
+    gen_backend = backend_for("generator", args.backend)
+    model = resolve_model("generator", gen_backend, args.model)
+    try:
+        ext_backend = backend_for("extractor")
+        extractor = (ext_backend, resolve_model("extractor", ext_backend))
+    except ValueError:
+        extractor = None  # extractor not configured yet: nothing to clash with
+    if extractor == (gen_backend, model):
+        print(f"error: generator and extractor are both {model} on {gen_backend}; they must differ", file=sys.stderr)
         return 2
     tax = Taxonomy()
     class_ids = tax.class_ids_with_data()
@@ -52,10 +57,9 @@ def cmd_generate(args: argparse.Namespace) -> int:
         print(f"estimated calls: ~{calls_p} plausibility + ~{calls_w} writer; tokens: ~{tin} in / ~{tout} out")
         print("no API calls were made")
         return 0
-    from workorder2data.llm import AnthropicClient
-
     load_dotenv()
-    samples = generate(tax, AnthropicClient(), model=model, total=args.total, test_total=args.test, seed=args.seed,
+    client = make_client(gen_backend, effort="low", base_url=args.base_url)
+    samples = generate(tax, client, model=model, total=args.total, test_total=args.test, seed=args.seed,
                        weights=weights, floor=args.floor, progress=lambda m: print(m, file=sys.stderr))
     write_jsonl(Path(args.out), samples)
     print(f"wrote {len(samples)} samples to {args.out} "
@@ -91,13 +95,22 @@ def _extractor(args: argparse.Namespace):
         model=args.model,
         glossary_path=Path(args.glossary) if args.glossary else None,
         tag_map_path=Path(args.tag_map) if args.tag_map else None,
+        backend=args.backend,
+        base_url=args.base_url,
     )
 
 
-def _check_models(extractor_model: str | None) -> str | None:
-    model = extractor_model or os.environ.get("W2D_EXTRACTOR_MODEL", EXTRACTOR_MODEL_DEFAULT)
-    if model == os.environ.get("W2D_GENERATOR_MODEL", GENERATOR_MODEL_DEFAULT):
-        return f"error: extractor model {model} is also the synthetic-data generator model; they must differ"
+def _check_models(args: argparse.Namespace) -> str | None:
+    """Error text if the extractor is also the synthetic-data generator (they must differ), else None."""
+    ext_backend = backend_for("extractor", args.backend)
+    ext = (ext_backend, resolve_model("extractor", ext_backend, args.model))
+    try:
+        gen_backend = backend_for("generator")
+        gen = (gen_backend, resolve_model("generator", gen_backend))
+    except ValueError:
+        return None
+    if ext == gen:
+        return f"error: extractor {ext[1]} on {ext[0]} is also the synthetic-data generator; they must differ"
     return None
 
 
@@ -141,7 +154,7 @@ def _read_workorders(args: argparse.Namespace) -> list[WorkOrder]:
 def cmd_batch(args: argparse.Namespace) -> int:
     from workorder2data.schema import read_jsonl
 
-    if (err := _check_models(args.model)):
+    if (err := _check_models(args)):
         print(err, file=sys.stderr)
         return 2
     try:
@@ -182,7 +195,7 @@ def cmd_batch(args: argparse.Namespace) -> int:
 
 
 def cmd_predict(args: argparse.Namespace) -> int:
-    if (err := _check_models(args.model)):
+    if (err := _check_models(args)):
         print(err, file=sys.stderr)
         return 2
     samples = [s for s in read_jsonl(Path(args.samples), Sample) if args.split is None or s.split == args.split]
@@ -219,7 +232,9 @@ def build_parser() -> argparse.ArgumentParser:
     g.add_argument("--test", type=int, default=60, help="how many samples go to the test split")
     g.add_argument("--floor", type=int, default=3, help="minimum samples per class")
     g.add_argument("--seed", type=int, default=1)
-    g.add_argument("--model", help=f"writer model (default {GENERATOR_MODEL_DEFAULT}); must differ from the extractor model")
+    g.add_argument("--model", help="writer model (backend default: anthropic claude-opus-5-5, claude-cli opus); must differ from the extractor")
+    g.add_argument("--backend", choices=BACKENDS, help="model backend (default env W2D_GENERATOR_BACKEND / W2D_BACKEND / anthropic)")
+    g.add_argument("--base-url", help="server URL for the ollama backend (default http://localhost:11434)")
     g.add_argument("--weights", default=str(DEFAULT_WEIGHTS))
     g.add_argument("--dry-run", action="store_true", help="show allocation and estimated usage; no API calls")
     g.set_defaults(func=cmd_generate)
@@ -236,7 +251,9 @@ def build_parser() -> argparse.ArgumentParser:
     i.set_defaults(func=cmd_review_import)
 
     def model_opts(sp):
-        sp.add_argument("--model", help=f"extractor model (default env W2D_EXTRACTOR_MODEL or {EXTRACTOR_MODEL_DEFAULT})")
+        sp.add_argument("--model", help="extractor model (backend default: anthropic claude-sonnet-5-5, claude-cli sonnet; ollama needs one, e.g. qwen3.5:latest)")
+        sp.add_argument("--backend", choices=BACKENDS, help="model backend (default env W2D_EXTRACTOR_BACKEND / W2D_BACKEND / anthropic)")
+        sp.add_argument("--base-url", help="server URL for the ollama backend (default http://localhost:11434)")
         sp.add_argument("--glossary", help="CSV of abbreviation,meaning (see configs/glossary.example.csv)")
         sp.add_argument("--tag-map", help="YAML mapping equipment-tag prefixes to class ids")
         sp.add_argument("--dry-run", action="store_true", help="estimate tokens only; no API calls")
@@ -282,7 +299,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except FileNotFoundError as e:
+    except (FileNotFoundError, LLMError, ValueError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 2
 

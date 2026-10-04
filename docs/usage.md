@@ -5,13 +5,22 @@ Input is messy work-order text; output is one record per distinct failure or mai
 ## Setup
 ```
 uv sync
-cp .env.example .env     # add ANTHROPIC_API_KEY (git-ignored)
 ```
-You need your own `taxonomy/*.csv` built from your licensed copy of ISO 14224 (see `taxonomy/README.md`). Default extractor model: `claude-sonnet-5-5` (env `W2D_EXTRACTOR_MODEL`), effort `medium` (env `W2D_EXTRACTOR_EFFORT`). It must differ from the model that generated any synthetic test data.
+You need your own `taxonomy/*.csv` built from your licensed copy of ISO 14224 (see `taxonomy/README.md`).
+
+### Model backends (pick one; no API key is required for the last two)
+| Backend | Needs | Notes |
+|---|---|---|
+| `anthropic` (default) | `ANTHROPIC_API_KEY` in a git-ignored `.env` (copy `.env.example`) | Best quality and speed; prompt caching. Default models: generator `claude-opus-5-5`, extractor `claude-sonnet-5-5`. |
+| `claude-cli` | the Claude Code CLI, logged in | Uses your Claude plan, no key. One process per call (~4 s). Models: `opus`, `sonnet`, `haiku`. |
+| `ollama` | a local Ollama server | Free and offline. Pass a model, e.g. `--model qwen3.5:latest`. Small models follow instructions less reliably and are slow (about 25 s per call on the test machine). |
+
+Select with `--backend` or the env vars `W2D_BACKEND` (both roles), `W2D_GENERATOR_BACKEND`, `W2D_EXTRACTOR_BACKEND`; models with `--model` or `W2D_GENERATOR_MODEL` / `W2D_EXTRACTOR_MODEL`. The extractor and the generator of the synthetic test data must be different models; the CLI refuses otherwise. Effort for the extractor: env `W2D_EXTRACTOR_EFFORT` (default `medium`).
 
 ## One text
 ```
 uv run w2d convert "P-101A mech seal leaking, found worn faces, replaced seal"
+uv run w2d convert "..." --backend ollama --model qwen3.5:latest   # no API key
 uv run w2d convert "..." --json
 uv run w2d convert "..." --dry-run        # token estimate, no API call
 ```

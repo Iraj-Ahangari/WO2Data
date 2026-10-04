@@ -14,15 +14,16 @@ Real work orders are not available yet, so the first test set is synthetic and *
 
 ## Workflow
 ```
-cp .env.example .env                  # put your Anthropic API key in .env (git-ignored)
 uv run w2d synth generate --dry-run   # allocation and estimated usage, no API calls
-uv run w2d synth generate             # writes data/synthetic/samples.jsonl
+uv run w2d synth generate             # anthropic backend (needs ANTHROPIC_API_KEY in .env); writes data/synthetic/samples.jsonl
+uv run w2d synth generate --backend claude-cli    # no API key: uses your Claude Code login
+# small trial: --total 27 --floor 1 --test 9
 uv run w2d synth review-export        # data/synthetic/review.csv (test split)
 # review: fix wrong cells (replace with the right code, or `unknown`), put y in the ok column
 uv run w2d synth review-import        # applies ok rows, marks fully reviewed samples
 uv run w2d eval --pred preds.jsonl --split test --reviewed-only
 ```
-The generator model (default `claude-opus-5-5`, env `W2D_GENERATOR_MODEL`) must differ from the extractor model (default `claude-sonnet-5-5`, env `W2D_EXTRACTOR_MODEL`); the CLI refuses otherwise, and `eval` warns if a prediction file was produced by the generator model.
+The generator model (anthropic default `claude-opus-5-5`, claude-cli `opus`; env `W2D_GENERATOR_MODEL`) must differ from the extractor model (anthropic default `claude-sonnet-5-5`, claude-cli `sonnet`, ollama: you choose; env `W2D_EXTRACTOR_MODEL`); the CLI refuses otherwise, and `eval` warns if a prediction file was produced by the generator model.
 
 ## Review CSV
 One row per gold record. Cells read `<code> | <name>` or `unknown`. To correct, replace the cell with the correct code; text after ` | ` is ignored. Only rows with `ok` = `y` are applied. Invalid codes abort the import with a list of every bad cell and change nothing. A sample counts as *reviewed* (gold) once every one of its records is ok; the rest stay silver.
